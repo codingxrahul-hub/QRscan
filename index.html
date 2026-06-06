@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraScan — Premium QR Scanner</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    <!-- jsQR Library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="bg-glow">
+        <div class="glow-orb glow-1"></div>
+        <div class="glow-orb glow-2"></div>
+    </div>
+
+    <!-- Haptic Flash Overlay -->
+    <div id="flash-overlay" class="flash-overlay"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i data-lucide="qr-code"></i>
+                </div>
+                <div class="brand-info">
+                    <h1>AuraScan</h1>
+                    <span class="status-badge">
+                        <span class="status-dot pulsing"></span>
+                        <span id="status-text">Camera ready</span>
+                    </span>
+                </div>
+            </div>
+            <button id="history-toggle-btn" class="icon-btn" aria-label="Open History">
+                <i data-lucide="history"></i>
+                <span id="history-badge" class="history-badge hidden">0</span>
+            </button>
+        </header>
+
+        <!-- Main Card -->
+        <main class="main-card">
+            <!-- Tabs -->
+            <div class="tab-container">
+                <div class="tab-slider"></div>
+                <button id="tab-camera" class="tab-btn active" data-tab="camera">
+                    <i data-lucide="aperture"></i>
+                    <span>Live Scan</span>
+                </button>
+                <button id="tab-upload" class="tab-btn" data-tab="upload">
+                    <i data-lucide="image"></i>
+                    <span>Upload Image</span>
+                </button>
+            </div>
+
+            <!-- Scanner Views -->
+            <div class="scanner-views">
+                <!-- Camera View -->
+                <div id="view-camera" class="scanner-view active">
+                    <div class="viewfinder-container">
+                        <video id="webcam-video" playsinline></video>
+                        <canvas id="hidden-canvas" style="display: none;"></canvas>
+                        
+                        <!-- Viewfinder overlay -->
+                        <div class="viewfinder">
+                            <!-- Brackets -->
+                            <div class="bracket top-left"></div>
+                            <div class="bracket top-right"></div>
+                            <div class="bracket bottom-left"></div>
+                            <div class="bracket bottom-right"></div>
+                            
+                            <!-- Laser scan line -->
+                            <div class="laser-line"></div>
+                        </div>
+
+                        <!-- Camera Loading/Message Overlay -->
+                        <div id="camera-message" class="camera-message">
+                            <i data-lucide="loader-2" class="spin"></i>
+                            <p>Starting Camera...</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick controls under camera -->
+                    <div class="quick-controls">
+                        <button id="switch-camera-btn" class="pill-btn secondary hidden">
+                            <i data-lucide="switch-camera"></i>
+                            <span>Flip Camera</span>
+                        </button>
+                        <button id="pause-scanner-btn" class="pill-btn primary">
+                            <i data-lucide="pause"></i>
+                            <span>Pause Scan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upload View -->
+                <div id="view-upload" class="scanner-view">
+                    <div id="drop-zone" class="drop-zone">
+                        <input type="file" id="file-input" accept="image/*" style="display: none;">
+                        <div class="drop-zone-content">
+                            <div class="upload-icon-wrapper">
+                                <i data-lucide="upload-cloud"></i>
+                            </div>
+                            <h3>Drag & Drop QR Image</h3>
+                            <p>Supports PNG, JPG, WEBP, or SVG</p>
+                            <button id="select-file-btn" class="pill-btn secondary">Browse File</button>
+                        </div>
+                        <div id="upload-preview-container" class="upload-preview-container hidden">
+                            <img id="upload-preview" alt="Preview">
+                            <button id="clear-upload-btn" class="clear-btn" aria-label="Clear image">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Result Section -->
+        <section class="result-section">
+            <div id="result-placeholder" class="result-card placeholder">
+                <div class="card-icon">
+                    <i data-lucide="scan"></i>
+                </div>
+                <div class="card-body">
+                    <h3>Ready to Scan</h3>
+                    <p>Align a QR code in the viewfinder or upload an image to begin.</p>
+                </div>
+            </div>
+
+            <!-- Result Cards (Populated Dynamically) -->
+            <div id="result-content" class="result-card hidden">
+                <!-- Smart results will be injected here by JS -->
+            </div>
+        </section>
+    </div>
+
+    <!-- History Bottom Sheet -->
+    <div id="history-sheet-overlay" class="sheet-overlay"></div>
+    <div id="history-sheet" class="bottom-sheet">
+        <div class="sheet-handle-area" id="sheet-handle">
+            <div class="sheet-handle"></div>
+        </div>
+        <div class="sheet-header">
+            <h2>Scan History</h2>
+            <button id="clear-history-btn" class="text-btn">Clear All</button>
+        </div>
+        <div class="sheet-content">
+            <div id="history-list" class="history-list">
+                <!-- History items injected here -->
+            </div>
+            <div id="history-empty" class="history-empty hidden">
+                <i data-lucide="history"></i>
+                <p>Your scan history is empty</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Script -->
+    <script src="app.js"></script>
+</body>
+</html>
